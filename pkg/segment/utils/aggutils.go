@@ -69,13 +69,11 @@ func Reduce(e1 CValueEnclosure, e2 CValueEnclosure, fun AggregateFunctions) (CVa
 		}
 	}
 
-	// TODO: what if one is int64 and the other is uint64? Is there any way to avoid annoying conversions?
-
 	switch e1.Dtype {
 	case SS_DT_UNSIGNED_NUM:
 		switch fun {
 		case Sumsq:
-			e1.CVal = e1.CVal.(uint64)+ (e2.CVal.(uint64)*e2.CVal.(uint64))
+			e1.CVal = e1.CVal.(uint64) + uint64(math.Pow(float64(e2.CVal.(uint64)), 2))
 			return e1, nil
 		case Sum, Count:
 			e1.CVal = e1.CVal.(uint64) + e2.CVal.(uint64)
@@ -91,8 +89,8 @@ func Reduce(e1 CValueEnclosure, e2 CValueEnclosure, fun AggregateFunctions) (CVa
 		}
 	case SS_DT_SIGNED_NUM:
 		switch fun {
-		case Sumsq: 
-			e1.CVal = e1.CVal.(int64) + (e2.CVal.(int64) * e2.CVal.(int64))
+		case Sumsq:
+			e1.CVal = e1.CVal.(int64) + int64(math.Pow(float64(e2.CVal.(int64)), 2))
 			return e1, nil
 		case Sum, Count:
 			e1.CVal = e1.CVal.(int64) + e2.CVal.(int64)
@@ -109,7 +107,7 @@ func Reduce(e1 CValueEnclosure, e2 CValueEnclosure, fun AggregateFunctions) (CVa
 	case SS_DT_FLOAT:
 		switch fun {
 		case Sumsq:
-			e1.CVal = e1.CVal.(float64) + (e2.CVal.(float64) * e2.CVal.(float64))
+			e1.CVal = e1.CVal.(float64) + math.Pow(e2.CVal.(float64), 2)
 			return e1, nil
 		case Sum, Count:
 			e1.CVal = e1.CVal.(float64) + e2.CVal.(float64)
@@ -123,6 +121,11 @@ func Reduce(e1 CValueEnclosure, e2 CValueEnclosure, fun AggregateFunctions) (CVa
 		default:
 			return e1, fmt.Errorf("Reduce: unsupported aggregation type %v for float", fun)
 		}
+	default:
+		return e1, fmt.Errorf("Reduce: unsupported CVal Dtype: %v", e1.Dtype)
+	}
+
+
 	case SS_DT_STRING_SET:
 		{
 			switch fun {
